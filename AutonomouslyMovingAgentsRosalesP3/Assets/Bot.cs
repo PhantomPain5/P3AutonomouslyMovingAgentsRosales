@@ -31,15 +31,47 @@ public class Bot : MonoBehaviour
     void Pursue()
     {
         Vector3 targetDir = target.transform.position - this.transform.position;
+
+        float relativeHeading = Vector3.Angle(this.transform.forward, this.transform.TransformVector(target.transform.forward));
+        float toTarget = Vector3.Angle(this.transform.forward, this.transform.TransformVector(targetDir));
+        if ((toTarget > 90 && relativeHeading < 20|| target.GetComponent<Drive>().currentSpeed < 0.01f))
+        {
+            Seek(target.transform.position);
+            return;
+        }
+
         float lookAhead = targetDir.magnitude/(agent.speed + target.GetComponent<Drive>().currentSpeed);
         Seek(target.transform.position + target.transform.forward * lookAhead);
     }
 
+    void Evade()
+    {
+        Vector3 targetDir = target.transform.position - this.transform.position;
+        float lookAhead = targetDir.magnitude / (agent.speed + target.GetComponent<Drive>().currentSpeed);
+        Seek(target.transform.position + target.transform.forward * lookAhead);
+    }
 
+    Vector3 wanderTarget = Vector3.zero;
+    void Wander()
+    {
+        float wanderRadius = 10;
+        float wanderDistance = 20;
+        float wanderJitter = 1;
+        wanderTarget += new Vector3(Random.Range(-1.0f, 1.0f) * wanderJitter,
+            0,
+            Random.Range(-1.0f, 1.0f) * wanderJitter);
+
+        wanderTarget.Normalize();
+        wanderTarget *= wanderRadius;
+        Vector3 targetlocal = wanderTarget + new Vector3(0, 0, wanderDistance);
+        Vector3 targetWorld = this.gameObject.transform.InverseTransformVector(targetlocal);
+
+
+    }
 
     // Update is called once per frame
     void Update()
     {
-        Pursue();
+        Wander();
     }
 }
